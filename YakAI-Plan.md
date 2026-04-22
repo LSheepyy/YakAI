@@ -378,11 +378,16 @@ File received
 │       → Route to Calendar Parser → GPT-4o-mini extracts all events
 │
 ├─ Video (mp4, mov, mkv, webm)
-│   └─ FFmpeg: extract audio → amplify + noise reduce
+│   └─ Before processing: show Lecture Assignment Dialog (see below)
+│       → User picks a lecture or marks as general
+│       → FFmpeg: extract audio → amplify + noise reduce
 │       → Whisper (local): full transcript with timestamps
 │       → FFmpeg: extract frame every 30s
 │       → GPT-4o: analyze each frame — detect board content, diagrams, equations
 │       → Save raw file to /raw/, all extracted data to /references/video-XX-processed.md
+│       → If assigned to a lecture: reference file is linked to that lecture in SQLite
+│           and its content is tagged in ChromaDB with that lecture's ID
+│       → If general: tagged as class-wide context, not tied to any specific lecture
 │
 ├─ Audio (mp3, wav, m4a, ogg)
 │   └─ FFmpeg: amplify + noise reduce
@@ -421,9 +426,54 @@ GPT-4o does not need a separate "vision service." When analyzing any image — a
 - Catches the same document re-exported with a different filename
 
 ### Video Processing — Special Handling
+
+#### Lecture Assignment Dialog
+Shown immediately when a video is dropped in, before any processing begins:
+
+```
+You dropped in: lecture-recording.mp4 (1h 42m)
+
+Which lecture is this for?
+
+  ○ Lecture 01 — Intro + KVL (Sept 8)
+  ○ Lecture 02 — KCL + Mesh Analysis (Sept 10)
+  ○ Lecture 03 — Nodal Analysis (Sept 15)
+  ○ Lecture 04 — [no title yet] (Sept 22)
+  ○ + Create a new lecture entry for this video
+  ○ General class video (not tied to a specific lecture)
+
+[Continue]  [Cancel]
+```
+
+- The list shows all existing lecture placeholders for this class (pre-filled from the syllabus if added, or manually created)
+- "Create a new lecture entry" lets the user name and date it on the spot before processing
+- "General class video" is for supplementary recordings — professor overviews, tutorial videos, review sessions — that cover multiple topics rather than one specific lecture
+- This dialog also appears for audio files (same logic applies)
+
+#### Why This Matters for the AI
+When a user asks "explain what was covered in Lecture 3," the RAG retriever filters ChromaDB by `lecture_id`. Without lecture tagging, all video content is thrown into a single pool and the AI can't isolate what was covered in a specific session. With it, the AI only pulls content tagged to that lecture — giving precise, focused answers.
+
+**ChromaDB metadata on every video chunk:**
+```python
+{
+  "class_id": "engr2410-circuit-analysis",
+  "lecture_id": "lecture-03",          # null if general
+  "source_type": "video",
+  "scope": "lecture" | "general",
+  "filename": "lecture-03-recording.mp4",
+  "timestamp_start": 1820,             # seconds into the video
+  "timestamp_end": 1890
+}
+```
+
+When scope is `"general"`, the chunk is still included in full-class queries (homework help, practice exams, free-form chat) — it's just excluded from single-lecture queries like "summarize lecture 2."
+
+#### After Processing
 1. Raw file kept in `/raw/` — user can delete later to save space; processed data is preserved
 2. A dedicated `video-XX-processed.md` reference file is created: full transcript, timestamp index, frame-by-frame diagram descriptions, key points, exam-flagged moments
-3. BRAIN file links to this reference so the AI has full access to the video's content
+3. If assigned to a lecture: the reference file is attached to that lecture entry and the BRAIN lecture index is updated automatically
+4. If general: added to the BRAIN under a new "Supplementary Videos" section
+5. The lecture entry in the Class Hub schedule updates from `○ [+ Attach recording]` to `✅ [🎥 recorded]`
 
 ---
 
