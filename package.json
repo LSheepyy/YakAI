@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "claude-flow": "^3.5.75",
+    "ecc-universal": "github:affaan-m/everything-claude-code"
+  }
+}
