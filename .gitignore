@@ -10,5 +10,7 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Misc
-*.md
+# Misc (exclude top-level markdown, but keep the tutorial folder)
+CLAUDE.md
+Claude Skills Reference.md
+!how-to-use/*.md
