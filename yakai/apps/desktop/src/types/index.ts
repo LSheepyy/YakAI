@@ -112,3 +112,55 @@ export interface CreateClassInput {
   professor?: string
   major?: string
 }
+
+export interface ChatMessage {
+  id: string
+  class_id: string
+  role: 'user' | 'assistant'
+  content: string
+  created_at: string
+}
+
+export interface QuizQuestion {
+  id: string
+  session_id: string
+  question_text: string
+  correct_answer: string
+  question_type: 'mcq' | 'short-answer' | 'step-by-step' | 'diagram-label' | 'formula'
+  hint_level_1: string | null
+  hint_level_2: string | null
+  hint_level_3: string | null
+  source_lecture_id: string | null
+  source_file_id: string | null
+  topic_tag: string | null
+  options?: string[]
+}
+
+export interface QuizAttemptResult {
+  is_correct: boolean
+  correct_answer: string
+  explanation: string
+}
+
+export interface TopicPerformance {
+  id: string
+  class_id: string
+  topic_tag: string
+  total_attempts: number
+  correct_count: number
+  accuracy_rate: number
+  last_updated: string
+}
+
+export interface SearchResult {
+  source_name: string
+  excerpt: string
+  file_type: string
+  relevance_score: number
+}
+
+export interface CostSummary {
+  total_cost: number
+  by_feature: Record<string, number>
+  by_model: Record<string, number>
+}

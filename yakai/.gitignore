@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+apps/desktop/dist/
+
+# ChromaDB / local data
+services/ai-core/chroma/
+*.db
+
+# Env / secrets
+.env
+.env.local
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tauri build artifacts
+apps/desktop/src-tauri/target/
+
+# Accidental pip artifacts
+services/ai-core/=*

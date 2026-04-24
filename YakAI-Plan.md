@@ -673,17 +673,56 @@ Professors sometimes post an updated syllabus mid-semester (changed exam date, a
 - OS native notifications for upcoming events (configurable lead time: 1 day, 3 days, 1 week)
 - Events can be manually added or edited directly in the calendar
 
-### 7.10 Past Exam Practice Mode
+### 7.10 Audio Study Summaries (Podcast Mode)
+
+Convert any lecture, topic range, or full class into a conversational audio recap the student can listen to while commuting, exercising, or before bed.
+
+**What it generates:**
+- A short conversational script (2–8 minutes depending on scope) written as a natural monologue — not a bullet list read aloud, but an explanation that flows like a podcast episode
+- Text-to-speech audio output using OpenAI's TTS API (`tts-1` model, voice selectable: alloy, echo, fable, onyx, nova, shimmer)
+- Saved as an MP3 in the class's `/raw/` folder and linked from the reference file
+
+**Generation scopes:**
+- Single lecture recap ("summarize what I need to know from Lecture 3")
+- Topic deep-dive ("explain Thevenin and Norton like a podcast")
+- Pre-exam cram ("hit all the high-priority topics for the midterm")
+- Weak areas only ("drill the topics I'm struggling with")
+
+**Script format (what GPT-4o generates):**
+The prompt instructs GPT-4o to write as if explaining the material to a friend — using the professor's specific methods, referencing examples from the lecture, and naturally flagging exam-important points. The script is constrained to the class BRAIN exactly like all other AI features.
+
+Example output style:
+> "Alright, so lecture three was all about nodal analysis. The key thing Dr. Smith kept emphasizing is that you always start by picking a reference node — usually the one with the most connections — and then writing KCL at every other node. Here's the tricky part students mess up on the midterm: when you have a voltage source between two non-reference nodes, you form what's called a supernode..."
+
+**Cost:**
+- GPT-4o to write the script: ~$0.02–0.08 depending on scope
+- TTS audio generation (`tts-1`): ~$0.015 per 1,000 characters — a 5-minute recap is roughly $0.05
+- Pre-generation cost estimate shown before processing (same pattern as video cost warnings)
+
+**UX flow:**
+1. User clicks "🎧 Audio Summary" from a lecture or the Quiz Me menu
+2. Selects scope (single lecture / topic range / pre-exam / weak areas)
+3. Selects voice (optional — defaults to a stored preference)
+4. Cost estimate shown → user confirms
+5. Script generated → TTS rendered → audio player appears inline
+6. User can play in-app or download as MP3
+
+**Storage:**
+- Script text saved as `audio-recap-[scope]-[date].md` in `/references/`
+- MP3 saved as `audio-recap-[scope]-[date].mp3` in `/raw/`
+- User can delete the MP3 to save space; the script is preserved
+
+### 7.11 Past Exam Practice Mode
 - Past exam PDFs flagged as "reference only — not course canon"
 - Practice exam generator: pulls past exam questions, ranks them by similarity to current semester's lecture coverage using ChromaDB, skips topics not yet covered
 - Results calibrated to your actual semester — not a raw dump of the old exam
 
-### 7.10 File Cache / Library
+### 7.12 File Cache / Library
 - Sub-tab in each class: all files ever added, with type icon, date, size
 - Raw files in `/raw/` — user can delete individual ones to save space; processed reference data is preserved
 - "View processed data" button opens the reference `.md` file the Ingestor created
 
-### 7.11 Data Backup / Export / Import / Class Sharing
+### 7.13 Data Backup / Export / Import / Class Sharing
 Students invest significant time in their class BRAINs. If a laptop dies, that data should not be lost.
 
 **Export a class:**
@@ -911,6 +950,12 @@ CREATE TABLE course_schedule (
 ---
 
 ## 9. UI Layout — Screen by Screen
+
+### Design Component Reference
+
+When building UI components, use **[21st.dev Featured Components](https://21st.dev/community/components/featured)** as the primary visual reference. This community library provides animated, AI-prompt-ready components — each entry includes the exact prompt needed to reproduce it. Use these as the starting point for all interactive and animated UI elements (cards, transitions, loaders, dashboards, etc.) rather than building from scratch.
+
+**How to use it:** Browse the featured gallery → pick a component that fits the screen you're building → copy its AI prompt → generate the component → adapt to YakAI's Tailwind theme and color tokens.
 
 ### Main Layout
 ```
@@ -1146,6 +1191,7 @@ The "without frame analysis" option still transcribes audio (free via local Whis
 |---|---|---|
 | GPT-4o | $2.50 | $10.00 |
 | GPT-4o-mini | $0.15 | $0.60 |
+| TTS (`tts-1`) | $15.00 per 1M characters | — |
 
 ---
 
@@ -1182,40 +1228,40 @@ Critical end-to-end flows verified together:
 ### Phase 1 — Foundation (Weeks 1–4)
 Goal: App opens, you can create a class, drop a PDF in, get a BRAIN file. CI/CD is live.
 
-- [ ] Tauri app shell + React frontend scaffolding
-- [ ] GitHub Actions: cross-platform build matrix (Windows + Mac) set up on day 1
-- [ ] App data directory resolved via Tauri `app_data_dir()`, passed to Python sidecar
-- [ ] Sidebar: semester/class tree (create, rename, archive, delete)
-- [ ] SQLite schema (all tables from Section 8)
-- [ ] Python sidecar: FastAPI boilerplate, startup/shutdown lifecycle, health check
-- [ ] Sidecar startup loading state + crash recovery in frontend
-- [ ] PDF ingestion: text + image extraction via PyMuPDF
-- [ ] GPT-4o image analysis of embedded PDF images
-- [ ] Basic BRAIN file generation from a PDF
-- [ ] File registry (hash + text fingerprint, duplicate detection)
-- [ ] Onboarding flow (name, major, API key with step-by-step guide, key validation)
-- [ ] Syllabus ingestion — GPT-4o extraction of professor info, TA info, grading weights, schedule, calendar events, policies
-- [ ] Syllabus confirmation modal (review + edit before saving)
-- [ ] Syllabus update detection (second syllabus → show diff, not duplicate warning)
-- [ ] Professor contact card + grading breakdown displayed in Class Hub
-- [ ] Course schedule pre-population from syllabus (lecture placeholder entries)
-- [ ] "No syllabus yet" prompt banner on Class Hub
+- [x] Tauri app shell + React frontend scaffolding
+- [x] GitHub Actions: cross-platform build matrix (Windows + Mac) set up on day 1
+- [x] App data directory resolved via Tauri `app_data_dir()`, passed to Python sidecar
+- [x] Sidebar: semester/class tree (create, rename, archive, delete)
+- [x] SQLite schema (all tables from Section 8)
+- [x] Python sidecar: FastAPI boilerplate, startup/shutdown lifecycle, health check
+- [x] Sidecar startup loading state + crash recovery in frontend
+- [x] PDF ingestion: text + image extraction via PyMuPDF
+- [x] GPT-4o image analysis of embedded PDF images
+- [x] Basic BRAIN file generation from a PDF
+- [x] File registry (hash + text fingerprint, duplicate detection)
+- [x] Onboarding flow (name, major, API key with step-by-step guide, key validation)
+- [x] Syllabus ingestion — GPT-4o extraction of professor info, TA info, grading weights, schedule, calendar events, policies
+- [x] Syllabus confirmation modal (review + edit before saving)
+- [x] Syllabus update detection (second syllabus → show diff, not duplicate warning)
+- [x] Professor contact card + grading breakdown displayed in Class Hub
+- [x] Course schedule pre-population from syllabus (lecture placeholder entries)
+- [x] "No syllabus yet" prompt banner on Class Hub
 
 ### Phase 2 — Core AI Loop (Weeks 5–8)
 Goal: The AI answers questions, chat works, quizzes work, search works.
 
-- [ ] ChromaDB setup + document embedding pipeline
-- [ ] RAG retrieval: "find relevant chunks for this query"
-- [ ] **Free-form Chat Mode** — per-class scoped chat window, history stored in SQLite
-- [ ] **Semantic Search** — ChromaDB-powered search across class content
-- [ ] Homework Help mode (question → RAG → GPT-4o → step-by-step answer + source)
-- [ ] Quiz generation (MCQ + short answer + step-by-step)
-- [ ] Hint system (3 levels, sourced from reference files)
-- [ ] Performance tracking (quiz_attempts + topic_performance tables)
-- [ ] Weak area detection + weighted quiz generation
-- [ ] BRAIN updater (adding a file updates the master BRAIN.md automatically)
-- [ ] GPT-4o vs GPT-4o-mini routing (model selection per task type)
-- [ ] API cost logging (`api_usage_log` table) + cost display in Settings
+- [x] ChromaDB setup + document embedding pipeline
+- [x] RAG retrieval: "find relevant chunks for this query"
+- [x] **Free-form Chat Mode** — per-class scoped chat window, history stored in SQLite
+- [x] **Semantic Search** — ChromaDB-powered search across class content
+- [x] Homework Help mode (question → RAG → GPT-4o → step-by-step answer + source)
+- [x] Quiz generation (MCQ + short answer + step-by-step)
+- [x] Hint system (3 levels, sourced from reference files)
+- [x] Performance tracking (quiz_attempts + topic_performance tables)
+- [x] Weak area detection + weighted quiz generation
+- [x] BRAIN updater (adding a file updates the master BRAIN.md automatically)
+- [x] GPT-4o vs GPT-4o-mini routing (model selection per task type)
+- [x] API cost logging (`api_usage_log` table) + cost display in Settings
 
 ### Phase 3 — Media Ingestion (Weeks 9–12)
 Goal: Drop a recording or video in and get a complete lecture reference file.
@@ -1241,6 +1287,9 @@ Goal: Calendar works, past exams work, YouTube works, backup works, class sharin
 - [ ] Grading weight influence on quiz generation (high-weight topics get more questions)
 - [ ] Past exam practice mode (similarity-weighted question selection)
 - [ ] YouTube ingestion via yt-dlp (supplementary, non-canon flag)
+- [ ] **Audio Study Summaries (Podcast Mode)** — GPT-4o generates conversational script → OpenAI TTS renders MP3 → in-app player + download; scopes: single lecture / topic range / pre-exam / weak areas
+- [ ] Voice selection preference saved in Settings
+- [ ] Cost estimate dialog before generation (script + TTS cost breakdown)
 - [ ] Class inheritance (link prior class as background context)
 - [ ] **Export class** as `.yakclass` file
 - [ ] **Import class** from `.yakclass` file (with merge/replace/cancel prompt)
@@ -1322,6 +1371,29 @@ Goal: The app feels finished, tested, and ready to demo.
 - Distribution: Mac App Store + Windows Store + direct download (`.dmg` / `.msi`)
 - Student verification: `.edu` email for potential discount
 - App code signing: Mac notarization (Apple Developer Program, $99/yr) + Windows code signing certificate (~$300–500/yr from DigiCert or Sectigo) — required for clean installs without security warnings
+
+### How Competitors Handle AI Without User API Keys (e.g. TurboLearn / Turbo AI)
+
+TurboLearn (now turbo.ai) is the most direct competitor — AI note generation, flashcards, quizzes, chat over uploaded material, and lecture recording. They have 5M+ users but consistent UX complaints (clunky navigation, slow uploads, no offline support, AI output sometimes copies rather than truly summarizes, no course/semester organization).
+
+**How they give users AI without an API key:** Standard SaaS backend proxy model. Their servers call OpenAI (or similar) directly and absorb all API costs. Users interact with the web frontend; they never see or configure an API key. The cost is recovered through subscription revenue. This is not a technical trick — it's purely a business model decision.
+
+**YakAI's BYOK vs. managed AI tradeoff:**
+
+| | YakAI (BYOK) | TurboLearn (Managed) |
+|---|---|---|
+| Setup friction | Higher — user needs an OpenAI account | None |
+| Cost transparency | Full — user sees exact per-feature cost | Hidden in subscription |
+| Offline capability | Yes — all local processing | No |
+| AI cost per user | User pays directly | Platform absorbs |
+| Scalability risk | None — zero marginal AI cost | High — must price above API usage |
+| Customization | User controls model/key | Locked to platform's models |
+
+**Managed AI as a future tier:** Once the core app is stable, consider offering a "YakAI Managed" higher tier (~$35–40/month) where YakAI's backend absorbs API costs — targeting students who don't want to set up OpenAI at all. This would require cloud infrastructure and careful cost metering per user. The BYOK plan stays as the affordable tier for students who are comfortable with API keys.
+
+### Podcast / Audio Summary Feature
+
+TurboLearn (competitor) does this and it's genuinely well-received. YakAI's version is now fully specced as **Section 7.10 — Audio Study Summaries** and scheduled for Phase 4.
 
 ---
 

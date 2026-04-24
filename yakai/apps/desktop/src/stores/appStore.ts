@@ -7,6 +7,8 @@ interface User {
   apiKey: string
 }
 
+type ActiveScreen = 'hub' | 'chat' | 'quiz' | 'homework' | 'settings' | 'search'
+
 interface AppState {
   sidecarReady: boolean
   sidecarError: string | null
@@ -27,6 +29,12 @@ interface AppState {
   addClass: (cls: Class) => void
   updateClass: (id: string, updates: Partial<Class>) => void
   removeClass: (id: string) => void
+
+  activeScreen: ActiveScreen
+  setActiveScreen: (screen: ActiveScreen) => void
+
+  settingsOpen: boolean
+  setSettingsOpen: (v: boolean) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -74,4 +82,10 @@ export const useAppStore = create<AppState>((set) => ({
       })),
       selectedClassId: state.selectedClassId === id ? null : state.selectedClassId,
     })),
+
+  activeScreen: 'hub',
+  setActiveScreen: (screen) => set({ activeScreen: screen }),
+
+  settingsOpen: false,
+  setSettingsOpen: (v) => set({ settingsOpen: v }),
 }))
